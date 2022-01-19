@@ -15,9 +15,9 @@ def sentiment_scores(sentence):
     sentiment_dict = sid_obj.polarity_scores(sentence)
      
     print("Overall sentiment dictionary is : ", sentiment_dict)
-    print("sentence was rated as ", sentiment_dict['neg']*100, "% Negative")
-    print("sentence was rated as ", sentiment_dict['neu']*100, "% Neutral")
-    print("sentence was rated as ", sentiment_dict['pos']*100, "% Positive")
+    # print("sentence was rated as ", sentiment_dict['neg']*100, "% Negative")
+    # print("sentence was rated as ", sentiment_dict['neu']*100, "% Neutral")
+    # print("sentence was rated as ", sentiment_dict['pos']*100, "% Positive")
  
     print("Sentence Overall Rated As", end = " ")
  
@@ -37,7 +37,9 @@ def sentiment_scores(sentence):
 if __name__ == "__main__" :
 
     # Import article from file
-    with open("article.txt") as file:
+    with open("data/article.txt") as file:
+
+        '''
         paragraphs  = file.readlines()
         for paragraph in paragraphs:
             # analyze sentiment
@@ -45,6 +47,7 @@ if __name__ == "__main__" :
             sentiment_scores(paragraph)
             # Newline
             print()
+        '''
 
         # Read full file to output an overall sentiment
         file.seek(0)
