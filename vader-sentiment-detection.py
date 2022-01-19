@@ -45,3 +45,9 @@ if __name__ == "__main__" :
             sentiment_scores(paragraph)
             # Newline
             print()
+
+        # Read full file to output an overall sentiment
+        file.seek(0)
+        full_article = file.read()
+        print("Sentiment analysis of full file: ")
+        sentiment_scores(full_article)
