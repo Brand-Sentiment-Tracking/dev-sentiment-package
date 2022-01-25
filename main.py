@@ -1,0 +1,23 @@
+import pandas as pd
+import numpy as np
+import json
+from pyspark.ml import Pipeline
+from pyspark.sql import SparkSession
+import pyspark.sql.functions as F
+from sparknlp.annotator import *
+from sparknlp.base import *
+import sparknlp
+from sparknlp.pretrained import PretrainedPipeline
+
+from brand_sentiment import ArticleExtraction
+from brand_sentiment import BrandSentiment
+from brand_sentiment import BrandIdentification
+
+
+if __name__ == '__main__':
+    spark = sparknlp.start()
+    article_extractor = ArticleExtraction()
+    brand_identifier = BrandIdentifier()
+    sentimentiser = BrandSentiment()
+    article = article_extractor.import_one_article('data/article.txt')
+    print(article)
