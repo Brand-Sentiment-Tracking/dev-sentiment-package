@@ -1,4 +1,5 @@
 Google sued in US over 'deceptive' location tracking
+
 Google is being sued in the US over accusations it deceived people about how to control location tracking.
 
 The legal action refers to a widely reported 2018 revelation turning off one location-tracking setting in its apps was insufficient to fully disable the feature.
