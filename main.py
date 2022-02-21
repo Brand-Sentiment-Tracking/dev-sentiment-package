@@ -9,9 +9,9 @@ from sparknlp.base import *
 import sparknlp
 from sparknlp.pretrained import PretrainedPipeline
 
-from brand_sentiment import ArticleExtraction
-from brand_sentiment import BrandSentiment
-from brand_sentiment import BrandIdentification
+from brand_sentiment.extraction import ArticleExtraction
+from brand_sentiment.sentiment import BrandSentiment
+from brand_sentiment.identification import BrandIdentification
 
 
 if __name__ == '__main__':

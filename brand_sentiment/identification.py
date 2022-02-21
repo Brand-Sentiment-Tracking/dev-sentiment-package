@@ -1,4 +1,4 @@
-from extraction import ArticleExtraction
+from brand_sentiment.extraction import ArticleExtraction
 
 import os
 import sparknlp
