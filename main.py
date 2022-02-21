@@ -17,7 +17,7 @@ from brand_sentiment.identification import BrandIdentification
 if __name__ == '__main__':
     spark = sparknlp.start()
     article_extractor = ArticleExtraction()
-    brand_identifier = BrandIdentifier()
+    brand_identifier = BrandIdentification()
     sentimentiser = BrandSentiment()
     article = article_extractor.import_one_article('data/article.txt')
     print(article)
