@@ -14,10 +14,20 @@ from brand_sentiment.sentiment import SentimentIdentification
 from brand_sentiment.identification import BrandIdentification
 
 
-if __name__ == '__main__':
-    spark = sparknlp.start()
+def test():
+    # spark = sparknlp.start()
     article_extractor = ArticleExtraction()
-    brand_identifier = BrandIdentification()
-    sentimentiser = BrandSentiment()
-    article = article_extractor.import_one_article('data/article.txt')
-    print(article)
+    # brand_identifier = BrandIdentifier()
+    # sentimentiser = BrandSentiment()
+    headlines = article_extractor.import_folder_headlines('data/cc_download_articles/cyprus-mail.com')
+    
+
+
+if __name__ == '__main__':
+    # spark = sparknlp.start()
+    # article_extractor = ArticleExtraction()
+    # brand_identifier = BrandIdentifier()
+    # sentimentiser = BrandSentiment()
+    # article = article_extractor.import_one_article('data/article.txt')
+    # print(article)
+    print(test())

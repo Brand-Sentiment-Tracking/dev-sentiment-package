@@ -102,7 +102,6 @@ class BrandIdentification:
         # TO DO: break even - Wikidata#
 
 
-
 if __name__ == '__main__':
     article_extractor = ArticleExtraction()
     script_dir = os.path.dirname(__file__)  # Script directory
