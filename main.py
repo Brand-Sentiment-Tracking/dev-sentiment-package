@@ -10,7 +10,7 @@ import sparknlp
 from sparknlp.pretrained import PretrainedPipeline
 
 from brand_sentiment.extraction import ArticleExtraction
-from brand_sentiment.sentiment import BrandSentiment
+from brand_sentiment.sentiment import SentimentIdentification
 from brand_sentiment.identification import BrandIdentification
 
 

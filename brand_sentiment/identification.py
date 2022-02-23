@@ -17,7 +17,7 @@ class BrandIdentification:
     def __init__(self, MODEL_NAME):
         self.MODEL_NAME = MODEL_NAME
 
-        # Define Spark NLP pipeline 
+        # Define Spark NLP pipeline
         documentAssembler = DocumentAssembler() \
             .setInputCol('text') \
             .setOutputCol('document')
@@ -47,13 +47,13 @@ class BrandIdentification:
             .setOutputCol('ner_chunk')
 
         nlp_pipeline = Pipeline(stages=[
-            documentAssembler, 
+            documentAssembler,
             tokenizer,
             embeddings,
             ner_model,
             ner_converter
         ])
-        
+
         # Create the pipeline model
         empty_df = spark.createDataFrame([['']]).toDF('text')
         self.pipeline_model = nlp_pipeline.fit(empty_df)
@@ -63,12 +63,12 @@ class BrandIdentification:
         # Run the pipeline for the text
         text_df = spark.createDataFrame(pd.DataFrame({'text': text}, index = [0]))
         result = self.pipeline_model.transform(text_df)
-        
+
         # Tabulate results
         df = result.select(F.explode(F.arrays_zip('document.result', 'ner_chunk.result',"ner_chunk.metadata")).alias("cols")).select(\
         F.expr("cols['1']").alias("chunk"),
         F.expr("cols['2'].entity").alias('result'))
-        
+
         # Rank the identified ORGs by frequencies
         ranked_df = df.filter(df.result == 'ORG').groupBy(df.chunk).count().orderBy('count', ascending=False)
 
@@ -80,11 +80,11 @@ class BrandIdentification:
         # Print the table
         ranked_df_hl.show(100, truncate=False)
 
-        # If only one ORG appears in headline, return it 
+        # If only one ORG appears in headline, return it
         # If an ORG appears more than the others, return it
         if ranked_df_hl.count() == 1:
         # if ranked_df_hl.count() == 1 or ranked_df_hl.first()[1] > ranked_df_hl.collect()[1][1]:
-            return ranked_df_hl.first()[0] 
+            return ranked_df_hl.first()[0]
         else: # If no ORG appears, or multiple ORGs appear the same time, return None
             return None
 
@@ -95,12 +95,12 @@ class BrandIdentification:
         ranked_df.show(100, truncate=False)
 
         # Return the ORG with highest freq if the freq >= 2
-        if ranked_df.first()[1] >= 2: 
-            return ranked_df.first()[0] 
+        if ranked_df.first()[1] >= 2:
+            return ranked_df.first()[0]
         else:
             return None
         # TO DO: break even - Wikidata#
-        
+
 
 
 if __name__ == '__main__':
@@ -108,16 +108,16 @@ if __name__ == '__main__':
     script_dir = os.path.dirname(__file__)  # Script directory
     headline_full_path = os.path.join(script_dir, 'data/headline.txt')
     body_full_path = os.path.join(script_dir, 'data/article_body.txt')
-    
+
     spark = sparknlp.start()
-    
+
     MODEL_NAME = "ner_dl_bert"
     # MODEL_NAME = "onto_100"
     brand_identifier = BrandIdentification(MODEL_NAME)
 
     headline = article_extractor.import_one_article(headline_full_path)
     body = article_extractor.import_one_article(body_full_path)
-    
+
     brand_by_headline = brand_identifier.predict_by_headline(headline)
     print(headline)
     print(brand_by_headline)
