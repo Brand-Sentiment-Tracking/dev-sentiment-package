@@ -159,8 +159,8 @@ if __name__ == '__main__':
     ################## Predict a list of strings  ##############
     article = ["Bad news for Tesla", "Tesla went bankrupt today."]
 
-    # identifier_pretrained = SentimentIdentification(MODEL_NAME = "classifierdl_bertwiki_finance_sentiment_pipeline")
-    identifier_pretrained = SentimentIdentification(MODEL_NAME = "custom_pipeline")
+    identifier_pretrained = SentimentIdentification(MODEL_NAME = "classifierdl_bertwiki_finance_sentiment_pipeline")
+    # identifier_pretrained = SentimentIdentification(MODEL_NAME = "custom_pipeline")
 
     identifier_pretrained.predict_string_list(article)
 
@@ -176,7 +176,7 @@ if __name__ == '__main__':
 
     if dataframe_type == "Pandas":
             # Store data in a Pandas Dataframe
-            df_pandas = pd.read_csv(sentiment_url)
+            df_pandas = pd.read_csv(sentiment_url, header=None)
 
             # Change column names (pipelines require a "text" column to predict)
             df_pandas.columns = ['True_Sentiment', 'text']
@@ -191,10 +191,6 @@ if __name__ == '__main__':
 
 
             ################ Classify Pandas dataframe #################
-
-            # Create identifier
-            identifier_pretrained = SentimentIdentification(MODEL_NAME = "classifierdl_bertwiki_finance_sentiment_pipeline")
-            # identifier_pretrained = SentimentIdentification(MODEL_NAME = "custom_pipeline")
 
             start = time.time()
             df_pandas_postprocessed = identifier_pretrained.predict_dataframe(df_pandas)
