@@ -15,10 +15,12 @@ from pyspark.sql.functions import array_join
 from pyspark.sql.functions import col, explode, expr, greatest
 from pyspark.sql.window import Window
 from pyspark.sql.functions import monotonically_increasing_id, row_number
+from pyspark import SparkFiles
 from sklearn.metrics import classification_report, accuracy_score
 
 import time
 from IPython.display import display
+
 
 class SentimentIdentification:
 
@@ -61,15 +63,18 @@ class SentimentIdentification:
             self.pipeline_model = PretrainedPipeline(self.MODEL_NAME, lang = 'en')
 
 
-    def predict_dataframe(self, df_pandas):
+    def predict_dataframe(self, df):
         """Annotates the input dataframe with the classification results.
 
         Args:
-          df_pandas : Pandas dataframe to classify (must contain a "text" column)
+          df : Pandas or Spark dataframe to classify (must contain a "text" column)
         """
 
-        # Convert to spark dataframe for faster prediction
-        df_spark = spark.createDataFrame(df_pandas) 
+        if isinstance(df, pd.DataFrame):
+            # Convert to spark dataframe for faster prediction
+            df_spark = spark.createDataFrame(df) 
+        else:
+            df_spark = df
 
         # Annotate dataframe with classification results
         df_spark = self.pipeline_model.transform(df_spark)
@@ -106,6 +111,7 @@ class SentimentIdentification:
         df_pandas_postprocessed = df_spark_combined.toPandas()
 
         return df_pandas_postprocessed
+
 
     def predict_string_list(self, string_list):
         """Predicts sentiment of the input list of strings.
@@ -165,40 +171,69 @@ if __name__ == '__main__':
 
     sentiment_url = 'https://raw.githubusercontent.com/Brand-Sentiment-Tracking/python-package/main/data/sentiment_test_data.csv'
 
-    # Store data in a Pandas Dataframe
-    df_pandas = pd.read_csv(sentiment_url)
+    # Choose dataframe type
+    dataframe_type = "Spark"
 
-    # Change column names (pipelines require a "text" column to predict)
-    df_pandas.columns = ['True_Sentiment', 'text']
+    if dataframe_type == "Pandas":
+            # Store data in a Pandas Dataframe
+            df_pandas = pd.read_csv(sentiment_url)
 
-    # Shuffle the DataFrame rows
-    df_pandas = df_pandas.sample(frac = 1)
+            # Change column names (pipelines require a "text" column to predict)
+            df_pandas.columns = ['True_Sentiment', 'text']
 
-    # Make dataset smaller for faster runtime
-    num_sentences = 10
-    total_num_sentences = df_pandas.shape[0]
-    df_pandas.drop(df_pandas.index[num_sentences:total_num_sentences], inplace=True)
+            # Shuffle the DataFrame rows
+            # df_pandas = df_pandas.sample(frac = 1)
+
+            # Make dataset smaller for faster runtime
+            num_sentences = 10
+            total_num_sentences = df_pandas.shape[0]
+            df_pandas.drop(df_pandas.index[num_sentences:total_num_sentences], inplace=True)
 
 
-    ################ Classify dataframe #################
+            ################ Classify Pandas dataframe #################
 
-    # Create identifier
-    identifier_pretrained = SentimentIdentification(MODEL_NAME = "classifierdl_bertwiki_finance_sentiment_pipeline")
-    # identifier_pretrained = SentimentIdentification(MODEL_NAME = "custom_pipeline")
+            # Create identifier
+            identifier_pretrained = SentimentIdentification(MODEL_NAME = "classifierdl_bertwiki_finance_sentiment_pipeline")
+            # identifier_pretrained = SentimentIdentification(MODEL_NAME = "custom_pipeline")
 
-    start = time.time()
-    df_pandas_postprocessed = identifier_pretrained.predict_dataframe(df_pandas)
-    end = time.time()
+            start = time.time()
+            df_pandas_postprocessed = identifier_pretrained.predict_dataframe(df_pandas)
+            end = time.time()
 
-    print(f"{end-start} seconds elapsed to classify {num_sentences} sentences.")
+            print(f"{end-start} seconds elapsed to classify {num_sentences} sentences from Pandas dataframe.")
 
-    display(df_pandas_postprocessed)
+            display(df_pandas_postprocessed)
+
+
+    elif dataframe_type == "Spark":
+            # Create a preprocessed Spark dataframe
+            spark.sparkContext.addFile(sentiment_url)
+
+            # Read raw dataframe
+            df_spark = spark.read.csv("file://"+SparkFiles.get("sentiment_test_data.csv"))
+
+            # Rename columns
+            df_spark = df_spark.withColumnRenamed("_c0", "True_Sentiment").withColumnRenamed("_c1", "text")
+            num_sentences = 10
+            df_spark = df_spark.limit(num_sentences)
+
+
+            ######## Classify Spark dataframe
+
+            start = time.time()
+            df_pandas_postprocessed = identifier_pretrained.predict_dataframe(df_spark)
+            end = time.time()
+
+            print(f"{end-start} seconds elapsed to classify {num_sentences} sentences from Spark dataframe.")
+
+            display(df_pandas_postprocessed)
+
+
 
     # Print accuracy metrics
     accuracy, report = identifier_pretrained.compute_accuracy(df_pandas_postprocessed)
     print(accuracy)
     print(report)
-
 
 # class BrandSentiment:
 #     def __init__(self, model_name):
