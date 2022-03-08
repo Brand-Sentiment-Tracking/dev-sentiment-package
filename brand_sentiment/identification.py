@@ -100,6 +100,7 @@ class BrandIdentification:
 
     def predict_brand(self, text): # text could be a pandas dataframe or a Spark dataframe (with a column "text"), a list of strings
         # Run the pipeline for the text
+        spark = sparknlp.start()
         
         if isinstance(text, pd.DataFrame): text_df = spark.createDataFrame(text) # If input a pandas dataframe
         elif isinstance(text, list): text_df = spark.createDataFrame(pd.DataFrame({'text': text})) # If input a list of strings
