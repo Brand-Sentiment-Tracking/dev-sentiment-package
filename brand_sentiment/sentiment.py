@@ -70,6 +70,7 @@ class SentimentIdentification:
         Args:
           df : Pandas or Spark dataframe to classify (must contain a "text" column)
         """
+        spark = sparknlp.start()
         
         if isinstance(df, pd.DataFrame):
             # Convert to spark dataframe for faster prediction
