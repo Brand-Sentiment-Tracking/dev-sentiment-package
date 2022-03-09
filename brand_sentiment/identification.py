@@ -98,7 +98,7 @@ class BrandIdentification:
         self.pipeline_model = nlp_pipeline.fit(empty_df)
 
 
-    def predict_brand(self, text): # text could be a pandas dataframe or a Spark dataframe (with a column "text"), a list of strings
+    def predict_brand(self, text): # text could be a pandas dataframe or a Spark dataframe (both with a column "text"), a list of strings or a single string
         # Run the pipeline for the text
         spark = sparknlp.start()
         
@@ -129,7 +129,6 @@ class BrandIdentification:
 if __name__ == '__main__':
     
     ##### Test for a list of strings
-    
     # spark = sparknlp.start()
 
     MODEL_NAME = "ner_dl_bert" # MODEL_NAME = "onto_100"
@@ -158,7 +157,6 @@ if __name__ == '__main__':
     df_NER.drop(df_NER.index[num_sentences:total_num_sentences], inplace=True)
 
 
-
     # Alternatively, create a preprocessed Spark dataframe from csv
     from pyspark import SparkFiles
     spark.sparkContext.addFile(NER_url)
@@ -179,4 +177,3 @@ if __name__ == '__main__':
     
     print(f"{end-start} seconds elapsed to create ranked tables for {num_sentences} sentences in a Pandas dataframe.")
     # print(f"{end-start} seconds elapsed to create ranked tables for {num_sentences} sentences in a Spark dataframe.")
-
