@@ -88,7 +88,7 @@ class SentimentIdentification:
 
         # Extract only target and label columns
         # df_spark = df_spark.select("text", "True_Sentiment", "class.result")
-        df_spark = df_spark.select("text", "Predicted_Brand", "class.result")
+        df_spark = df_spark.select("text", "Predicted_Brand", "class.result") # This is to run main.py
 
         # Rename to result column to Predicted Sentiment
         df_spark = df_spark.withColumnRenamed("result", "Predicted_Sentiment")
@@ -223,7 +223,7 @@ if __name__ == '__main__':
             # df_spark = df_spark.limit(num_sentences)
 
 
-            ######## Classify Spark dataframe
+            ################ Classify Spark dataframe #################
 
             # start = time.time()
             # # df_pandas_postprocessed = identifier_pretrained.predict_dataframe(df_spark)
