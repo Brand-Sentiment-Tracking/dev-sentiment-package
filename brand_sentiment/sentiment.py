@@ -82,10 +82,15 @@ class SentimentIdentification:
         df_spark = self.pipeline_model.transform(df_spark)
 
         # Extract sentiment score
-        df_spark_scores = df_spark.select(explode(col("class.metadata")).alias("metadata")).select(col("metadata")["positive"].alias("positive"),
+        if self.MODEL_NAME == "custom_pipeline":
+          df_spark_scores = df_spark.select(explode(col("class.metadata")).alias("metadata")).select(col("metadata")["Some(positive)"].alias("positive"),
+                                                                                            col("metadata")["Some(neutral)"].alias("neutral"),
+                                                                                            col("metadata")["Some(negative)"].alias("negative"))
+        else:
+          df_spark_scores = df_spark.select(explode(col("class.metadata")).alias("metadata")).select(col("metadata")["positive"].alias("positive"),
                                                                                             col("metadata")["neutral"].alias("neutral"),
                                                                                             col("metadata")["negative"].alias("negative"))
-
+        
         # Extract only target and label columns
         # df_spark = df_spark.select("text", "True_Sentiment", "class.result")
         df_spark = df_spark.select("text", "Predicted_Brand", "class.result") # This is to run main.py
