@@ -2,14 +2,14 @@ import os
 import json
 import boto3
 
-## all_files = boto3.list_files()
-## --> ["2022-06-03/www_bbc_co_uk_news_something.json", ...]
-## for each file in all_files:
-##     path_list = os.path.split(file)
-## --> ["2022-06-03", "www_bbc_co_uk_news_something.json"]
-## earlest_date = min(["2022-06-03", "2022-06-02"])
-## all_files_to_process = glob(f"{earliest_date}/*", all_files)
-## for each file in all_files_to_process:
+# all_files = boto3.list_files()
+# --> ["2022-06-03/www_bbc_co_uk_news_something.json", ...]
+# for each file in all_files:
+#     path_list = os.path.split(file)
+# --> ["2022-06-03", "www_bbc_co_uk_news_something.json"]
+# earlest_date = min(["2022-06-03", "2022-06-02"])
+# all_files_to_process = glob(f"{earliest_date}/*", all_files)
+# for each file in all_files_to_process:
 #     fp = boto3.get_file(file)
 #
 # objs = boto3.client.list_objects(Bucket='extractedarticlesdev')
@@ -22,8 +22,8 @@ class ArticleExtraction:
         self.headlines = []
         self.s3 = boto3.client("s3",
                                region_name='eu-west-2',
-                               aws_access_key_id='AKIAVMTMYZ2B5JQTOUHG',
-                               aws_secret_access_key='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')
+                               aws_access_key_id=ACCESS_KEY,
+                               aws_secret_access_key=SECRET_ACCESS_KEY)
         # print(self.s3.list_buckets())
         self.bucket = 'extracted-articles-dev'
         # self.article_paths = self.s3.list_objects(Bucket=self.bucket)

@@ -14,25 +14,17 @@ from brand_sentiment.sentiment import SentimentIdentification
 from brand_sentiment.identification import BrandIdentification
 
 
-def test():
-    # spark = sparknlp.start()
-    article_extractor = ArticleExtraction()
-    # brand_identifier = BrandIdentifier()
-    # sentimentiser = BrandSentiment()
-    list_of_headlines = article_extractor.import_folder_headlines('data/cc_download_articles/cyprus-mail.com')
-
-    return list_of_headlines
-
-
 if __name__ == '__main__':
     spark = sparknlp.start()
-    # article_extractor = ArticleExtraction()
+    article_extractor = ArticleExtraction()
     brand_identifier = BrandIdentification("ner_dl_bert")
     sentimentiser = SentimentIdentification(MODEL_NAME="classifierdl_bertwiki_finance_sentiment_pipeline")
     # article = article_extractor.import_one_article('data/article.txt')
     # print(article)
     # print(test())
-    list_of_headlines = test()
-    brand_spark_df = brand_identifier.predict_brand(list_of_headlines)
+    headlines = article_extractor.import_folder_headlines('data/cc_download_articles/cyprus-mail.com')
+    print(headlines)
+    brand_spark_df = brand_identifier.predict_brand(headlines)
+    print(brand_spark_df)
     complete_spark_df = sentimentiser.predict_dataframe(brand_spark_df)
     print(complete_spark_df)

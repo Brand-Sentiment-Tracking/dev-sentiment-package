@@ -19,44 +19,43 @@ from sparknlp_display import NerVisualizer
 
 # The spark udf function that has to be defined outside the class
 def get_brand(row_list):
-    if not row_list: # If the list is empty
+    if not row_list:  # If the list is empty
         return "None"
 
     else:
         # Create a pandas df with entity names and types
         data = [[row.result, row.metadata['entity']] for row in row_list]
-        df_pd = pd.DataFrame(data, columns = ['Entity', 'Type'])
-      
+        df_pd = pd.DataFrame(data, columns=['Entity', 'Type'])
+
         # Filter only ORGs
         df_pd = df_pd[df_pd["Type"] == "ORG"]
 
         # Rank the ORGs by frequencies
-        ranked_df = df_pd["Entity"].value_counts() # a Pandas Series object
-            
+        ranked_df = df_pd["Entity"].value_counts()  # a Pandas Series object
+
         # If no ORG identified in headline, return None
         if len(ranked_df.index) == 0:
-           return "None"
+            return "None"
 
         # If only one ORG appears in headline, return it
         elif len(ranked_df.index) == 1:
-           return ranked_df.index[0]
+            return ranked_df.index[0]
 
-        # If one ORG appear more than the others, return that one 
+        # If one ORG appear more than the others, return that one
         elif ranked_df[0] > ranked_df[1]:
-            return ranked_df.index[0] 
+            return ranked_df.index[0]
 
-        else: # If multiple ORGs appear the same time, return randomly (TO BE MODIFIED)
+        else:  # If multiple ORGs appear the same time, return randomly (TO BE MODIFIED)
             return random.choice([ranked_df.index[0], ranked_df.index[1]])
-            # TO DO: break even - Wikidata for article body #
+            # TO DO: break even - Wikidata for article body
 
 
-            
 class BrandIdentification:
     def __init__(self, MODEL_NAME):
         self.MODEL_NAME = MODEL_NAME
         spark = sparknlp.start()
 
-        # Define Spark NLP pipeline 
+        # Define Spark NLP pipeline
         documentAssembler = DocumentAssembler() \
             .setInputCol('text') \
             .setOutputCol('document')
@@ -86,13 +85,13 @@ class BrandIdentification:
             .setOutputCol('ner_chunk')
 
         nlp_pipeline = Pipeline(stages=[
-            documentAssembler, 
+            documentAssembler,
             tokenizer,
             embeddings,
             ner_model,
             ner_converter
         ])
-        
+
         # Create the pipeline model
         empty_df = spark.createDataFrame([['']]).toDF('text') # An empty df with column name "text"
         self.pipeline_model = nlp_pipeline.fit(empty_df)
@@ -101,13 +100,13 @@ class BrandIdentification:
     def predict_brand(self, text): # text could be a pandas dataframe or a Spark dataframe (both with a column "text"), a list of strings or a single string
         # Run the pipeline for the text
         spark = sparknlp.start()
-        
+
         if isinstance(text, pd.DataFrame): text_df = spark.createDataFrame(text) # If input a pandas dataframe
         elif isinstance(text, list): text_df = spark.createDataFrame(pd.DataFrame({'text': text})) # If input a list of strings
         elif isinstance(text, str): text_df = spark.createDataFrame(pd.DataFrame({'text': text}, index=[0])) # If input a single string
         else: text_df = text
 
-        df_spark = self.pipeline_model.transform(text_df) 
+        df_spark = self.pipeline_model.transform(text_df)
 
         # Improve speed of identification using Spark User-defined function
         pred_brand = F.udf(lambda z: get_brand(z), StringType()) # Output a string
@@ -123,15 +122,13 @@ class BrandIdentification:
 
         return df_spark_final
 
-        
-
 
 if __name__ == '__main__':
-    
+
     ##### Test for a list of strings
     # spark = sparknlp.start()
 
-    MODEL_NAME = "ner_dl_bert" # MODEL_NAME = "onto_100"
+    MODEL_NAME = "ner_dl_bert"  # MODEL_NAME = "onto_100"
     brand_identifier = BrandIdentification(MODEL_NAME)
 
     list_of_headlines = ["Bad news for Google", "Tesla went bankrupt today."]
@@ -144,7 +141,7 @@ if __name__ == '__main__':
     # Load the data from Github
     NER_url = 'https://raw.githubusercontent.com/Brand-Sentiment-Tracking/python-package/main/data/NER_test_data.csv'
 
-    # Convert csv data to Pandas dataframe 
+    # Convert csv data to Pandas dataframe
     df_NER = pd.read_csv(NER_url, header=None).head(500) # 'header=None' prevents pandas eating the first row as headers
     df_NER.columns = ['Brand', 'text']
 
@@ -157,23 +154,23 @@ if __name__ == '__main__':
     df_NER.drop(df_NER.index[num_sentences:total_num_sentences], inplace=True)
 
 
-    # Alternatively, create a preprocessed Spark dataframe from csv
-    from pyspark import SparkFiles
-    spark.sparkContext.addFile(NER_url)
-
-    # Read raw dataframe
-    df_spark_org = spark.read.csv("file://"+SparkFiles.get("NER_test_data.csv"))
-
-    # Rename columns
-    df_spark_org = df_spark_org.withColumnRenamed("_c0", "Brand").withColumnRenamed("_c1", "text")
-    df_spark_org = df_spark_org.limit(num_sentences)
-    
-
-    # Predict brand using either the Pandas or Spark dataframe
-    start = time.time()
-    brand_identifier.predict_brand(df_NER)
-    # brand_identifier.predict_brand(df_spark_org)
-    end = time.time()
-    
-    print(f"{end-start} seconds elapsed to create ranked tables for {num_sentences} sentences in a Pandas dataframe.")
-    # print(f"{end-start} seconds elapsed to create ranked tables for {num_sentences} sentences in a Spark dataframe.")
+    # # Alternatively, create a preprocessed Spark dataframe from csv
+    # from pyspark import SparkFiles
+    # spark.sparkContext.addFile(NER_url)
+    #
+    # # Read raw dataframe
+    # df_spark_org = spark.read.csv("file://"+SparkFiles.get("NER_test_data.csv"))
+    #
+    # # Rename columns
+    # df_spark_org = df_spark_org.withColumnRenamed("_c0", "Brand").withColumnRenamed("_c1", "text")
+    # df_spark_org = df_spark_org.limit(num_sentences)
+    #
+    #
+    # # Predict brand using either the Pandas or Spark dataframe
+    # start = time.time()
+    # brand_identifier.predict_brand(df_NER)
+    # # brand_identifier.predict_brand(df_spark_org)
+    # end = time.time()
+    #
+    # print(f"{end-start} seconds elapsed to create ranked tables for {num_sentences} sentences in a Pandas dataframe.")
+    # # print(f"{end-start} seconds elapsed to create ranked tables for {num_sentences} sentences in a Spark dataframe.")

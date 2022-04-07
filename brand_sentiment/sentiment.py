@@ -35,8 +35,8 @@ class SentimentIdentification:
         self.MODEL_NAME = MODEL_NAME
         spark = sparknlp.start()
 
-          # Create a custom pipline if requested
-        if self.MODEL_NAME == "custom_pipeline": # https://nlp.johnsnowlabs.com/2021/11/03/bert_sequence_classifier_finbert_en.html
+        # Create a custom pipline if requested
+        if self.MODEL_NAME == "custom_pipeline":  # https://nlp.johnsnowlabs.com/2021/11/03/bert_sequence_classifier_finbert_en.html
             document_assembler = DocumentAssembler() \
                 .setInputCol('text') \
                 .setOutputCol('document')
@@ -63,7 +63,6 @@ class SentimentIdentification:
         else:
             self.pipeline_model = PretrainedPipeline(self.MODEL_NAME, lang = 'en')
 
-
     def predict_dataframe(self, df):
         """Annotates the input dataframe with the classification results.
 
@@ -71,10 +70,10 @@ class SentimentIdentification:
           df : Pandas or Spark dataframe to classify (must contain a "text" column)
         """
         spark = sparknlp.start()
-        
+
         if isinstance(df, pd.DataFrame):
             # Convert to spark dataframe for faster prediction
-            df_spark = spark.createDataFrame(df) 
+            df_spark = spark.createDataFrame(df)
         else:
             df_spark = df
 
@@ -83,14 +82,14 @@ class SentimentIdentification:
 
         # Extract sentiment score
         if self.MODEL_NAME == "custom_pipeline":
-          df_spark_scores = df_spark.select(explode(col("class.metadata")).alias("metadata")).select(col("metadata")["Some(positive)"].alias("positive"),
+            df_spark_scores = df_spark.select(explode(col("class.metadata")).alias("metadata")).select(col("metadata")["Some(positive)"].alias("positive"),
                                                                                             col("metadata")["Some(neutral)"].alias("neutral"),
                                                                                             col("metadata")["Some(negative)"].alias("negative"))
         else:
-          df_spark_scores = df_spark.select(explode(col("class.metadata")).alias("metadata")).select(col("metadata")["positive"].alias("positive"),
+            df_spark_scores = df_spark.select(explode(col("class.metadata")).alias("metadata")).select(col("metadata")["positive"].alias("positive"),
                                                                                             col("metadata")["neutral"].alias("neutral"),
                                                                                             col("metadata")["negative"].alias("negative"))
-        
+
         # Extract only target and label columns
         # df_spark = df_spark.select("text", "True_Sentiment", "class.result")
         df_spark = df_spark.select("text", "Predicted_Brand", "class.result") # This is to run main.py
@@ -104,13 +103,13 @@ class SentimentIdentification:
         # Join the predictions dataframe to the scores dataframe
         # Add temporary column index to join
         w = Window.orderBy(monotonically_increasing_id())
-        df_spark_with_index =  df_spark.withColumn("columnindex", row_number().over(w))
-        df_spark_scores_with_index =  df_spark_scores.withColumn("columnindex", row_number().over(w))
+        df_spark_with_index = df_spark.withColumn("columnindex", row_number().over(w))
+        df_spark_scores_with_index = df_spark_scores.withColumn("columnindex", row_number().over(w))
 
         # Join the predictions and the scores in one dataframe
         df_spark_with_index = df_spark_with_index.join(df_spark_scores_with_index,
-                                df_spark_with_index.columnindex == df_spark_scores_with_index.columnindex,
-                                'inner').drop(df_spark_scores_with_index.columnindex)
+                                   df_spark_with_index.columnindex == df_spark_scores_with_index.columnindex,
+                                   'inner').drop(df_spark_scores_with_index.columnindex)
 
         # Remove the index column
         df_spark_combined = df_spark_with_index.drop(df_spark_with_index.columnindex)
@@ -119,10 +118,9 @@ class SentimentIdentification:
         # df_pandas_postprocessed = df_spark_combined.toPandas()
 
         df_spark_combined.show(100)
-        
+
         # return df_pandas_postprocessed
         return df_spark_combined
-
 
     def predict_string_list(self, string_list):
         """Predicts sentiment of the input list of strings.
@@ -130,7 +128,7 @@ class SentimentIdentification:
         Args:
           string_list: List of strings to classify.
         """
- 
+
         # Annotate input text using pretrained model
 
         if self.MODEL_NAME == "custom_pipeline":
@@ -142,14 +140,13 @@ class SentimentIdentification:
 
         return [annotation['class'][0] for annotation in annotations] # Return the sentiment list of strings
 
-
     def compute_accuracy(self, df_pandas_postprocessed):
         """Computes accuracy by comparing labels of input dataframe.
 
         Args:
           df_pandas_postprocessed: pandas dataframe containing "True_Sentiment" and "Predicted_Sentiment" columns
         """
-    
+
         from sklearn.metrics import classification_report, accuracy_score
 
         # Compute the accuracy
@@ -164,10 +161,9 @@ class SentimentIdentification:
         return accuracy, classification_report
 
 
-
 if __name__ == '__main__':
     # spark = sparknlp.start()
-    
+
     ################## Predict a list of strings  ##############
     article = ["Bad news for Tesla", "Tesla went bankrupt today."]
 
@@ -176,7 +172,7 @@ if __name__ == '__main__':
 
     identifier_pretrained.predict_string_list(article)
 
-    
+
 
     ################# Load dataframe ############
 
