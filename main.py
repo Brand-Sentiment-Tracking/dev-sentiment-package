@@ -12,7 +12,8 @@ from sparknlp.pretrained import PretrainedPipeline
 from brand_sentiment.extraction import ArticleExtraction
 from brand_sentiment.sentiment import SentimentIdentification
 from brand_sentiment.identification import BrandIdentification
-
+from IPython.display import display
+import time
 
 if __name__ == '__main__':
     spark = sparknlp.start()
@@ -24,7 +25,16 @@ if __name__ == '__main__':
     # print(test())
     headlines = article_extractor.import_folder_headlines('data/cc_download_articles/cyprus-mail.com')
     print(headlines)
+
+    # Measure prediction speed
+    start = time.time()
+
     brand_spark_df = brand_identifier.predict_brand(headlines)
-    print(brand_spark_df)
     complete_spark_df = sentimentiser.predict_dataframe(brand_spark_df)
-    print(complete_spark_df)
+    complete_spark_df.show()
+
+    end = time.time()
+    print(f"Time to identify brands and predict sentiment {end-start}")
+
+    # Display as pandas dataframe for better visualization
+    display(complete_spark_df.toPandas()) 

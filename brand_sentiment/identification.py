@@ -8,7 +8,7 @@ import pandas as pd
 from pyspark import SparkFiles
 from pyspark.ml import Pipeline
 from pyspark.sql import SparkSession
-from pyspark.sql.types import StringType
+from pyspark.sql.types import StringType, ArrayType
 import pyspark.sql.functions as F
 import sparknlp
 from sparknlp.annotator import *
@@ -19,36 +19,13 @@ from sparknlp_display import NerVisualizer
 
 # The spark udf function that has to be defined outside the class
 def get_brand(row_list):
-    if not row_list:  # If the list is empty
-        return "None"
+    if not row_list: # If the list is empty
+        return [] # If no entities detected return an empty list
 
     else:
-        # Create a pandas df with entity names and types
+        # Create a list of lists with the idetified entity and type
         data = [[row.result, row.metadata['entity']] for row in row_list]
-        df_pd = pd.DataFrame(data, columns=['Entity', 'Type'])
-
-        # Filter only ORGs
-        df_pd = df_pd[df_pd["Type"] == "ORG"]
-
-        # Rank the ORGs by frequencies
-        ranked_df = df_pd["Entity"].value_counts()  # a Pandas Series object
-
-        # If no ORG identified in headline, return None
-        if len(ranked_df.index) == 0:
-            return "None"
-
-        # If only one ORG appears in headline, return it
-        elif len(ranked_df.index) == 1:
-            return ranked_df.index[0]
-
-        # If one ORG appear more than the others, return that one
-        elif ranked_df[0] > ranked_df[1]:
-            return ranked_df.index[0]
-
-        else:  # If multiple ORGs appear the same time, return randomly (TO BE MODIFIED)
-            return random.choice([ranked_df.index[0], ranked_df.index[1]])
-            # TO DO: break even - Wikidata for article body
-
+        return data
 
 class BrandIdentification:
     def __init__(self, MODEL_NAME):
@@ -109,18 +86,17 @@ class BrandIdentification:
         df_spark = self.pipeline_model.transform(text_df)
 
         # Improve speed of identification using Spark User-defined function
-        pred_brand = F.udf(lambda z: get_brand(z), StringType()) # Output a string
-        # spark.udf.register("pred_brand", pred_brand)
+        pred_brand = F.udf(lambda z: get_brand(z), ArrayType(ArrayType(StringType()))) # Output a list of lists containing [entity, type] pairs
 
         df_spark_combined = df_spark.withColumn('Predicted_Brand', pred_brand('ner_chunk'))
-        df_spark_combined = df_spark_combined.select("text", "Predicted_Brand")
+        df_spark_combined = df_spark_combined.select("text", 'Predicted_Brand')
         # df_spark_combined.show(100)
 
         # Remove all rows with no brands detected
-        df_spark_final=df_spark_combined.filter(df_spark_combined.Predicted_Brand != 'None')
-        df_spark_final.show(100)
+        df_spark_combined  = df_spark_combined.filter(F.size(df_spark_combined.Predicted_Brand) > 0) # Only keep lists with at least one identified entity
+        # df_spark_final.show(100)
 
-        return df_spark_final
+        return df_spark_combined
 
 
 if __name__ == '__main__':

@@ -17,10 +17,21 @@ from pyspark.sql.window import Window
 from pyspark.sql.functions import monotonically_increasing_id, row_number
 from pyspark import SparkFiles
 from sklearn.metrics import classification_report, accuracy_score
+from pyspark.sql.types import StringType, ArrayType
+import pyspark.sql.functions as F
 
 import time
 from IPython.display import display
 
+
+# Define the spark udf function outside the class
+def append_sentiment(pair_list, sentiment):
+        """Append sentiment to each entry in pred brand list. """
+
+        for pair in pair_list:
+            pair.append(sentiment)
+
+        return pair_list
 
 class SentimentIdentification:
 
@@ -114,10 +125,15 @@ class SentimentIdentification:
         # Remove the index column
         df_spark_combined = df_spark_with_index.drop(df_spark_with_index.columnindex)
 
+        # Append sentiment to each entry in pred brand list
+        append_sent = F.udf(lambda x, y: append_sentiment(x, y), ArrayType(ArrayType(StringType()))) # Output a list of lists
+        df_spark_combined = df_spark_combined.withColumn('Predicted_Brand', append_sent('Predicted_Brand', 'Predicted_Sentiment'))
+
+
         # Convert to pandas dataframe for postprocessing (https://towardsdatascience.com/text-classification-in-spark-nlp-with-bert-and-universal-sentence-encoders-e644d618ca32)
         # df_pandas_postprocessed = df_spark_combined.toPandas()
 
-        df_spark_combined.show(100)
+        # df_spark_combined.show(100)
 
         # return df_pandas_postprocessed
         return df_spark_combined
