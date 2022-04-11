@@ -37,4 +37,4 @@ if __name__ == '__main__':
     print(f"Time to identify brands and predict sentiment {end-start}")
 
     # Display as pandas dataframe for better visualization
-    display(complete_spark_df.toPandas()) 
+    # display(complete_spark_df.toPandas()) 
