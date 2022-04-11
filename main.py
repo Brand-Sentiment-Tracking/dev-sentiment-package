@@ -36,5 +36,9 @@ if __name__ == '__main__':
     end = time.time()
     print(f"Time to identify brands and predict sentiment {end-start}")
 
+
     # Display as pandas dataframe for better visualization
     # display(complete_spark_df.toPandas()) 
+
+    # Write the output as a parquet file
+    complete_spark_df.write.parquet('data/output_data.parquet')
