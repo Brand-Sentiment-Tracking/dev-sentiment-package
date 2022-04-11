@@ -1,0 +1,4 @@
+.DS_Store
+data/cc_download_articles/*
+data/*
+myVirtualEnvironment/*
