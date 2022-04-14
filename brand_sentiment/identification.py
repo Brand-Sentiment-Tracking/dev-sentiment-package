@@ -74,26 +74,21 @@ class BrandIdentification:
         self.pipeline_model = nlp_pipeline.fit(empty_df)
 
 
-    def predict_brand(self, text): # text could be a pandas dataframe or a Spark dataframe (both with a column "text"), a list of strings or a single string
-        # Run the pipeline for the text
+    def predict_brand(self, df): # df is a spark dataframe with a column named "text", which contains the headlines or sentences
+        # Run the pipeline for the spark df containing the "text" column
         spark = sparknlp.start()
 
-        if isinstance(text, pd.DataFrame): text_df = spark.createDataFrame(text) # If input a pandas dataframe
-        elif isinstance(text, list): text_df = spark.createDataFrame(pd.DataFrame({'text': text})) # If input a list of strings
-        elif isinstance(text, str): text_df = spark.createDataFrame(pd.DataFrame({'text': text}, index=[0])) # If input a single string
-        else: text_df = text
-
-        df_spark = self.pipeline_model.transform(text_df)
+        df_spark = self.pipeline_model.transform(df)
 
         # Improve speed of identification using Spark User-defined function
         pred_brand = F.udf(lambda z: get_brand(z), ArrayType(ArrayType(StringType()))) # Output a list of lists containing [entity, type] pairs
 
-        df_spark_combined = df_spark.withColumn('Predicted_Brand', pred_brand('ner_chunk'))
-        df_spark_combined = df_spark_combined.select("text", 'Predicted_Brand')
+        df_spark_combined = df_spark.withColumn("Predicted_Entity", pred_brand('ner_chunk'))
+        df_spark_combined = df_spark_combined.select("text", "source_domain", "date_publish", "language", "Predicted_Entity")
         # df_spark_combined.show(100)
 
         # Remove all rows with no brands detected
-        df_spark_combined  = df_spark_combined.filter(F.size(df_spark_combined.Predicted_Brand) > 0) # Only keep lists with at least one identified entity
+        df_spark_combined  = df_spark_combined.filter(F.size(df_spark_combined.Predicted_Entity) > 0) # Only keep lists with at least one identified entity
         # df_spark_final.show(100)
 
         return df_spark_combined
