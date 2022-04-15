@@ -128,9 +128,9 @@ class SentimentIdentification:
         # Append sentiment to each entry in pred brand list
         append_sent = F.udf(lambda x, y: append_sentiment(x, y), ArrayType(ArrayType(StringType()))) # Output a list of lists
         df_spark_combined = df_spark_combined.withColumn('Predicted_Entity_and_Sentiment', append_sent('Predicted_Entity', 'Predicted_Sentiment'))
-        df_spark_combined = df_spark_combined.select("text", "source_domain", "date_publish", "language", "Predicted_Entity_and_Sentiment")
-        # To keep positive/neutral/negative probabilities in the output spark df
-        # df_spark_combined = df_spark_combined.drop('Predicted_Entity', 'Predicted_Sentiment')
+        # df_spark_combined = df_spark_combined.select("text", "source_domain", "date_publish", "language", "Predicted_Entity_and_Sentiment")
+        # If want to keep positive/neutral/negative probabilities in the output spark df
+        df_spark_combined = df_spark_combined.drop('Predicted_Entity', 'Predicted_Sentiment')
 
         # Convert to pandas dataframe for postprocessing (https://towardsdatascience.com/text-classification-in-spark-nlp-with-bert-and-universal-sentence-encoders-e644d618ca32)
         # df_pandas_postprocessed = df_spark_combined.toPandas()
