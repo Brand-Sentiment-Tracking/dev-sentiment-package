@@ -23,14 +23,18 @@ if __name__ == '__main__':
     # article = article_extractor.import_one_article('data/article.txt')
     # print(article)
     # print(test())
-    headlines = article_extractor.import_folder_headlines('data/cc_download_articles/cyprus-mail.com')
-    print(headlines)
+    input_df = spark.read.parquet("test_model.parquet")\
+                    .withColumnRenamed("title","text")\
+                    .withColumn("language", F.lit("en")) # Rename the "text" column and add a "language" column
+    # input_df = spark.read.format("csv").option("header","true").load("test_model.csv") 
+    # list_of_strings = article_extractor.import_folder_headlines('data/cc_download_articles/cyprus-mail.com')
+    input_df.show()
 
     # Measure prediction speed
     start = time.time()
 
-    brand_spark_df = brand_identifier.predict_brand(headlines)
-    complete_spark_df = sentimentiser.predict_dataframe(brand_spark_df)
+    entity_spark_df = brand_identifier.predict_brand(input_df)
+    complete_spark_df = sentimentiser.predict_dataframe(entity_spark_df)
     complete_spark_df.show()
 
     end = time.time()
@@ -41,4 +45,4 @@ if __name__ == '__main__':
     # display(complete_spark_df.toPandas()) 
 
     # Write the output as a parquet file
-    complete_spark_df.write.parquet('data/output_data.parquet')
+    # complete_spark_df.write.parquet('data/output_data.parquet')
