@@ -19,7 +19,7 @@ if __name__ == '__main__':
     spark = sparknlp.start()
     article_extractor = ArticleExtraction()
     brand_identifier = BrandIdentification("ner_dl_bert")
-    sentimentiser = SentimentIdentification(MODEL_NAME="classifierdl_bertwiki_finance_sentiment_pipeline")
+    sentimentiser = SentimentIdentification(MODEL_NAME="custom_pipeline")
     # article = article_extractor.import_one_article('data/article.txt')
     # print(article)
     # print(test())
