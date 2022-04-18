@@ -2,12 +2,11 @@ import sparknlp
 import unittest
 import os
 
-# # Relative import
-# from ..brand_sentiment.extraction import ArticleExtraction
+# Relative import
+from brand_sentiment.extraction import ArticleExtraction
 
 import sys
 sys.path.append('F:\IMPERIAL MATERIAL\4. Group Project\prod-sentiment-package')
-import extraction
 
 
 class TestArticleExtraction(unittest.TestCase):

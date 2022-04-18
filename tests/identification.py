@@ -38,7 +38,7 @@ class TestBrandIdentification(unittest.TestCase):
 
 
     def test_predict_df_with_examples(self):
-        """ Check if nothing is returned for an empty spark df.
+        """ Check if the correct entities and types are returned for several examples.
         """
         self.new_fake_df = self.fake_df.withColumn("text", lit("Google went bankrupt today.")) # [“The Trade Desk", "ORG"]
         self.new_data = [{"text": 'The global unemployment rate rises.', "source_domain": "BBC", "date_publish": "2022-04-06T10:25:19", "language": "en"}, # Will be filtered
