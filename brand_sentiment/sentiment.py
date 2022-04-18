@@ -100,6 +100,8 @@ class SentimentIdentification:
             df_spark_scores = df_spark.select(explode(col("class.metadata")).alias("metadata")).select(col("metadata")["positive"].alias("positive"),
                                                                                             col("metadata")["neutral"].alias("neutral"),
                                                                                             col("metadata")["negative"].alias("negative"))
+        
+        df_spark_scores = df_spark_scores.withColumn("score", col("positive")-col("negative"))
 
         # Extract only target and label columns
         # df_spark = df_spark.select("text", "True_Sentiment", "class.result")
@@ -180,9 +182,9 @@ class SentimentIdentification:
 
 
 if __name__ == '__main__':
-    # spark = sparknlp.start()
+    spark = sparknlp.start()
 
-    ################## Predict a list of strings  ##############
+    ################# Predict a list of strings  ##############
     article = ["Bad news for Tesla", "Tesla went bankrupt today."]
 
     identifier_pretrained = SentimentIdentification(MODEL_NAME = "classifierdl_bertwiki_finance_sentiment_pipeline")

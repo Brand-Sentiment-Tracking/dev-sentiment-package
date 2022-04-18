@@ -45,4 +45,4 @@ if __name__ == '__main__':
     # display(complete_spark_df.toPandas()) 
 
     # Write the output as a parquet file
-    # complete_spark_df.write.parquet('data/output_data.parquet')
+    complete_spark_df.write.partitionBy("date_publish").mode("overwrite").parquet('data/output_data.parquet')

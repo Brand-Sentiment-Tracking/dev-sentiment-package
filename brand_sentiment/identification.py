@@ -19,13 +19,14 @@ from sparknlp_display import NerVisualizer
 
 # The spark udf function that has to be defined outside the class
 def get_brand(row_list):
-    if not row_list: # If the list is empty
-        return [] # If no entities detected return an empty list
+    if not row_list: # If the list of detected entities is empty
+        return [] # Return an empty list
 
     else:
-        # Create a list of lists with the idetified entity and type
+        # Create a list of lists with entity and type
         data = [[row.result, row.metadata['entity']] for row in row_list]
         return data
+
 
 class BrandIdentification:
     def __init__(self, MODEL_NAME):
@@ -74,8 +75,8 @@ class BrandIdentification:
         self.pipeline_model = nlp_pipeline.fit(empty_df)
 
 
-    def predict_brand(self, df): # df is a spark dataframe with a column named "text", which contains the headlines or sentences
-        # Run the pipeline for the spark df containing the "text" column
+    def predict_brand(self, df): # df is a spark df with a column named "text" - headlines or sentences
+        # Run the pipeline for the spark df 
         spark = sparknlp.start()
 
         df_spark = self.pipeline_model.transform(df)
@@ -88,60 +89,60 @@ class BrandIdentification:
         # df_spark_combined.show(100)
 
         # Remove all rows with no brands detected
-        df_spark_combined  = df_spark_combined.filter(F.size(df_spark_combined.Predicted_Entity) > 0) # Only keep lists with at least one identified entity
-        # df_spark_final.show(100)
-
+        # Only keep lists with at least one identified entity
+        df_spark_combined  = df_spark_combined.filter(F.size(df_spark_combined.Predicted_Entity) > 0) 
+        df_spark_combined.show()
+        
         return df_spark_combined
 
 
 if __name__ == '__main__':
 
-    ##### Test for a list of strings
-    # spark = sparknlp.start()
+    # ##### Test for a list of strings
+    spark = sparknlp.start()
 
     MODEL_NAME = "ner_dl_bert"  # MODEL_NAME = "onto_100"
     brand_identifier = BrandIdentification(MODEL_NAME)
 
-    list_of_headlines = ["Bad news for Google", "Tesla went bankrupt today."]
-
-    brands = brand_identifier.predict_brand(list_of_headlines)
+    # list_of_headlines = ["Bad news for Google", "Tesla went bankrupt today."]
+    # brands = brand_identifier.predict_brand(list_of_headlines)
 
 
 
     ##### Test for financial headlines
     # Load the data from Github
-    NER_url = 'https://raw.githubusercontent.com/Brand-Sentiment-Tracking/python-package/main/data/NER_test_data.csv'
+    NER_url = 'https://raw.githubusercontent.com/Brand-Sentiment-Tracking/dev-sentiment-package/main/data/NER_test_data.csv'
 
     # Convert csv data to Pandas dataframe
-    df_NER = pd.read_csv(NER_url, header=None).head(500) # 'header=None' prevents pandas eating the first row as headers
-    df_NER.columns = ['Brand', 'text']
+    # df_NER = pd.read_csv(NER_url, header=None).head(500) # 'header=None' prevents pandas eating the first row as headers
+    # df_NER.columns = ['Brand', 'text']
 
-    # Shuffle the DataFrame rows
-    # df_NER = df_NER.sample(frac = 1)
+    # # Shuffle the DataFrame rows
+    # # df_NER = df_NER.sample(frac = 1)
 
-    # Make dataset smaller for faster runtime
+    # # Make dataset smaller for faster runtime
     num_sentences = 10
-    total_num_sentences = df_NER.shape[0]
-    df_NER.drop(df_NER.index[num_sentences:total_num_sentences], inplace=True)
+    # total_num_sentences = df_NER.shape[0]
+    # df_NER.drop(df_NER.index[num_sentences:total_num_sentences], inplace=True)
 
 
-    # # Alternatively, create a preprocessed Spark dataframe from csv
-    # from pyspark import SparkFiles
-    # spark.sparkContext.addFile(NER_url)
-    #
-    # # Read raw dataframe
-    # df_spark_org = spark.read.csv("file://"+SparkFiles.get("NER_test_data.csv"))
-    #
-    # # Rename columns
-    # df_spark_org = df_spark_org.withColumnRenamed("_c0", "Brand").withColumnRenamed("_c1", "text")
-    # df_spark_org = df_spark_org.limit(num_sentences)
-    #
-    #
-    # # Predict brand using either the Pandas or Spark dataframe
-    # start = time.time()
+    # Alternatively, create a preprocessed Spark dataframe from csv
+    from pyspark import SparkFiles
+    spark.sparkContext.addFile(NER_url)
+    
+    # Read raw dataframe
+    df_spark_org = spark.read.csv("file://"+SparkFiles.get("NER_test_data.csv"))
+    
+    # Rename columns
+    df_spark_org = df_spark_org.withColumnRenamed("_c0", "Brand").withColumnRenamed("_c1", "text")
+    df_spark_org = df_spark_org.limit(num_sentences)
+    
+    
+    # Predict brand using either the Pandas or Spark dataframe
+    start = time.time()
     # brand_identifier.predict_brand(df_NER)
-    # # brand_identifier.predict_brand(df_spark_org)
-    # end = time.time()
-    #
+    brand_identifier.predict_brand(df_spark_org)
+    end = time.time()
+    
     # print(f"{end-start} seconds elapsed to create ranked tables for {num_sentences} sentences in a Pandas dataframe.")
-    # # print(f"{end-start} seconds elapsed to create ranked tables for {num_sentences} sentences in a Spark dataframe.")
+    print(f"{end-start} seconds elapsed to create ranked tables for {num_sentences} sentences in a Spark dataframe.")

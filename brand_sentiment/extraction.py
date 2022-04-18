@@ -1,11 +1,13 @@
+from lib2to3.pgen2.pgen import DFAState
 import nltk.data
 import os
 import json
+import sparknlp
 
 
 class ArticleExtraction:
     def __init__(self):
-        self.headlines = []
+        self.dates_and_headlines = []
 
     def import_one_article(self, filepath):
 
@@ -18,7 +20,8 @@ class ArticleExtraction:
         with open(filepath, 'r') as f:
             try:
                 data = json.load(f)
-                self.headlines.append(data['title'])
+                # Store the date and headline as a list of tuples
+                self.dates_and_headlines.append((data['date_download'], data['title'])) 
             except:
                 print('SKIP')
 
@@ -36,11 +39,16 @@ class ArticleExtraction:
         for root, dirs, files in os.walk(folderpath):
             for name in files:
                 self.import_one_headline_json(os.path.join(root, name))
-        return self.headlines
+
+        spark = sparknlp.start()
+        # The input spark df must have a "text" column to pass to model
+        input_df = spark.createDataFrame(self.dates_and_headlines, ["date_download", "text"]) 
+
+        return input_df
 
 
 if __name__ == '__main__':
     article_extractor = ArticleExtraction()
     # article_extractor.import_subfolder_headlines('./data/cc_download_articles/cyprus-mail.com')
-    headlines = article_extractor.import_folder_headlines('./data/cc_download_articles')
-    print(len(headlines))
+    df = article_extractor.import_folder_headlines('./data/cc_download_articles')
+    print((df.count(), len(df.columns)))
