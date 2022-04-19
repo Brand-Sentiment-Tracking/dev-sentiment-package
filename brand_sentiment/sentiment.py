@@ -102,6 +102,7 @@ class SentimentIdentification:
                                                                                             col("metadata")["negative"].alias("negative"))
         
         df_spark_scores = df_spark_scores.withColumn("score", col("positive")-col("negative"))
+        # df_spark_scores.show()
 
         # Extract only target and label columns
         # df_spark = df_spark.select("text", "True_Sentiment", "class.result")

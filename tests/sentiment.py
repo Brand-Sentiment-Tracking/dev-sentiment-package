@@ -37,11 +37,11 @@ class TestSentimentIdentification(unittest.TestCase):
         extra_df = self.spark.createDataFrame(new_data)
         new_fake_df = self.fake_df.union(extra_df)
         df_combined = self.sentimentiser.predict_dataframe(new_fake_df)       
-        df_combined.show()
+        # df_combined.show()
 
         # print(type(df_combined.select(["Predicted_Entity"]).collect()[0][0]))
-        print(df_combined.select(["Predicted_Entity_and_Sentiment"]).collect()[0][0])
-        print(df_combined.select(["Predicted_Entity_and_Sentiment"]).collect()[1][0])
+        # print(df_combined.select(["Predicted_Entity_and_Sentiment"]).collect()[0][0])
+        # print(df_combined.select(["Predicted_Entity_and_Sentiment"]).collect()[1][0])
 
         self.assertTrue(df_combined.select(["Predicted_Entity_and_Sentiment"]).collect()[0][0] == [["Google", "ORG", "negative"]])
         self.assertTrue(df_combined.select(["Predicted_Entity_and_Sentiment"]).collect()[1][0] == [["Microsoft", "ORG", "positive"]])
@@ -56,8 +56,9 @@ class TestSentimentIdentification(unittest.TestCase):
             ]
             new_df = self.spark.createDataFrame(new_data)
             df_combined = self.sentimentiser.predict_dataframe(new_df)  
-            
-            print(df_combined.select(["Predicted_Entity_and_Sentiment"]).collect()[0][0])
+            # df_combined.show()
+
+            # print(df_combined.select(["Predicted_Entity_and_Sentiment"]).collect()[0][0])
             self.assertTrue(df_combined.select(["Predicted_Entity_and_Sentiment"]).collect()[0][0] == [["Andy Warhol", "PER", "neutral"], ["Sotheby's", "ORG", "neutral"], ["US", "LOC", "neutral"]])
 
     ###### TO DO: check if the three prob columns exist ####
